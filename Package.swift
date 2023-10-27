@@ -43,7 +43,7 @@ let package = Package(
             dependencies: ["SwiftGodotKit", "libgodot"]),
         .binaryTarget (
             name: "libgodot",
-            path: "../build/libgodot.xcframework"),
+            path: "../prebuilt/libgodot.xcframework"),
         .testTarget(
             name: "SwiftGodotKitTests",
             dependencies: ["SwiftGodotKit"]),
