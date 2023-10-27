@@ -14,9 +14,9 @@ let package = Package(
         .library(
             name: "SwiftGodotKit",
             targets: ["SwiftGodotKit"]),
-        .library(name: "Dodge", targets: ["Dodge"]),
-        .executable(name: "UglySample", targets: ["UglySample"]),
-        .executable(name: "TrivialSample", targets: ["TrivialSample"])
+        //.library(name: "Dodge", targets: ["Dodge"]),
+        //.executable(name: "UglySample", targets: ["UglySample"]),
+        //.executable(name: "TrivialSample", targets: ["TrivialSample"])
     ],
     dependencies: [
         .package(path: "../SwiftGodot")
@@ -29,19 +29,19 @@ let package = Package(
             name: "SwiftGodotKit",
             dependencies: ["SwiftGodot", "libgodot"]),
         
-        .executableTarget(
-            name: "UglySample",
-            dependencies: ["SwiftGodotKit"]),
-
-            .executableTarget(
-            name: "TrivialSample",
-            dependencies: ["SwiftGodotKit"]),
+//        .executableTarget(
+//            name: "UglySample",
+//            dependencies: ["SwiftGodotKit"]),
+//
+//            .executableTarget(
+//            name: "TrivialSample",
+//            dependencies: ["SwiftGodotKit"]),
 
 
         // This is a sample that I am porting
-        .target(
-            name: "Dodge",
-            dependencies: ["SwiftGodotKit", "libgodot"]),
+//        .target(
+//            name: "Dodge",
+//            dependencies: ["SwiftGodotKit", "libgodot"]),
         .binaryTarget (
             name: "libgodot",
             path: "../prebuilt/libgodot.xcframework"),
