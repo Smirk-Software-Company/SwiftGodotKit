@@ -7,6 +7,7 @@
 import Foundation
 import SwiftGodot
 import libgodot
+import SwiftUI
 @_implementationOnly import GDExtension
 
 func embeddedExtensionInit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
@@ -110,8 +111,8 @@ public func godot_load_engine(args: [String]) -> GodotResult {
     }))
 }
 
-public func godot_start_engine() -> GodotResult {
-    return GodotResult(rawValue: godot_runtime_api!.pointee.godot_start_engine())
+public func godot_start_engine(layer: CALayer) -> GodotResult {
+    return GodotResult(rawValue: godot_runtime_api!.pointee.godot_start_engine(UInt64(bitPattern:Int64(Int(bitPattern: Unmanaged.passRetained(layer).toOpaque())))))
 }
 
 public func godot_iterate_engine() -> GodotResult {
