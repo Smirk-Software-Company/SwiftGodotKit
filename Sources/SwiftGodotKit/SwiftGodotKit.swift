@@ -71,7 +71,7 @@ public enum GodotResult: Int32 {
     }
 }
 
-    
+var godot_name = ""
 var godot_runtime_api: UnsafeMutablePointer<libgodot.GodotRuntimeAPI>? = nil
 var initCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
     
@@ -84,6 +84,7 @@ public func addInitCallback(_ cb: @escaping (_ level: GDExtension.Initialization
 }
 
 public func initGodot(library_name: String) {
+    godot_name = library_name
     godot_runtime_api = libgodot.godot_load_library()
     godot_runtime_api!.pointee.godot_register_extension_library(library_name, { godotGetProcAddr, libraryPtr, extensionInit in
         if let godotGetProcAddr {
@@ -103,8 +104,8 @@ public func initGodot(library_name: String) {
 
 public func godot_load_engine(args: [String]) -> GodotResult {
     var copy = args
-    copy.insert("SwiftGodotKit", at: 0)
-    return GodotResult(rawValue: withUnsafePtr(strings: args, callback: { ptr in
+    copy.insert(godot_name, at: 0)
+    return GodotResult(rawValue: withUnsafePtr(strings: copy, callback: { ptr in
         return godot_runtime_api!.pointee.godot_load_engine(Int32 (copy.count), ptr)
     }))
 }
