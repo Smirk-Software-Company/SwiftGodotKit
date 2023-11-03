@@ -17,7 +17,9 @@ func embeddedExtensionInit (userData: UnsafeMutableRawPointer?, l: GDExtensionIn
 }
 
 func embeddedExtensionDeinit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
-    print ("SwiftEmbed: Unregister here")
+    for cb in deinitCallbacks {
+        cb(GDExtension.InitializationLevel(rawValue: Int (l.rawValue))!)
+    }
 }
 
 // Courtesy of GPT-4
@@ -75,12 +77,13 @@ public enum GodotResult: Int32 {
 var godot_name = ""
 var godot_runtime_api: UnsafeMutablePointer<libgodot.GodotRuntimeAPI>? = nil
 var initCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
-    
-func extensionInit(level: GDExtension.InitializationLevel) {
-    
-}
+var deinitCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
+var godot_started = false
 
 public func addInitCallback(_ cb: @escaping (_ level: GDExtension.InitializationLevel) -> ()) {
+    if godot_started {
+        cb(GDExtension.InitializationLevel.scene)
+    }
     initCallbacks.append(cb)
 }
 
@@ -112,7 +115,11 @@ public func godot_load_engine(args: [String]) -> GodotResult {
 }
 
 public func godot_start_engine(layer: CALayer) -> GodotResult {
-    return GodotResult(rawValue: godot_runtime_api!.pointee.godot_start_engine(UInt64(bitPattern:Int64(Int(bitPattern: Unmanaged.passRetained(layer).toOpaque())))))
+    var result = GodotResult(rawValue: godot_runtime_api!.pointee.godot_start_engine(UInt64(bitPattern:Int64(Int(bitPattern: Unmanaged.passRetained(layer).toOpaque())))))
+    if result == GodotResult.OK {
+        godot_started = true
+    }
+    return result
 }
 
 public func godot_iterate_engine() -> GodotResult {
@@ -120,6 +127,10 @@ public func godot_iterate_engine() -> GodotResult {
 }
 
 public func godot_shutdown_engine() -> GodotResult {
-    return GodotResult(rawValue: godot_runtime_api!.pointee.godot_shutdown_engine())
+    var result = GodotResult(rawValue: godot_runtime_api!.pointee.godot_shutdown_engine())
+    if result == GodotResult.EXIT {
+        godot_started = false
+    }
+    return result
 }
 
