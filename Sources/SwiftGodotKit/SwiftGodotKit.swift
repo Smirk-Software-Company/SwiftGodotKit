@@ -78,6 +78,7 @@ var godot_name = ""
 var godot_runtime_api: UnsafeMutablePointer<libgodot.GodotRuntimeAPI>? = nil
 var initCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
 var deinitCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
+var runAfterStartCallbacks: [() -> ()] = []
 var godot_started = false
 
 public func addInitCallback(_ cb: @escaping (_ level: GDExtension.InitializationLevel) -> ()) {
@@ -85,6 +86,14 @@ public func addInitCallback(_ cb: @escaping (_ level: GDExtension.Initialization
         cb(GDExtension.InitializationLevel.scene)
     }
     initCallbacks.append(cb)
+}
+
+public func runAfterStart(_ cb: @escaping () -> ()) {
+    if godot_started {
+        cb()
+    } else {
+        runAfterStartCallbacks.append(cb)
+    }
 }
 
 public func initGodot(library_name: String) {
@@ -119,6 +128,10 @@ public func godot_start_engine(layer: CALayer) -> GodotResult {
     if result == GodotResult.OK {
         godot_started = true
     }
+    for cb in runAfterStartCallbacks {
+        cb()
+    }
+    runAfterStartCallbacks.removeAll()
     return result
 }
 
