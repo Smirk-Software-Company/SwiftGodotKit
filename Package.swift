@@ -7,7 +7,7 @@ let package = Package(
     name: "SwiftGodotKit",
     platforms: [
         .macOS(.v13),
-        .iOS(.v17),
+        .iOS(.v15),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -26,7 +26,7 @@ let package = Package(
             dependencies: ["SwiftGodot", "libgodot"]),
         .binaryTarget (
             name: "libgodot",
-            path: "../build/libgodot.xcframework"),
+            path: "../libgodot.xcframework"),
         .testTarget(
             name: "SwiftGodotKitTests",
             dependencies: ["SwiftGodotKit"]),
