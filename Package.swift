@@ -7,20 +7,16 @@ let package = Package(
     name: "SwiftGodotKit",
     platforms: [
         .macOS(.v13),
+        .iOS(.v17),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "SwiftGodotKit",
             targets: ["SwiftGodotKit"]),
-        .library(name: "Dodge", targets: ["Dodge"]),
-        .executable(name: "UglySample", targets: ["UglySample"]),
-        .executable(name: "Properties", targets: ["Properties"]),
-        .executable(name: "TrivialSample", targets: ["TrivialSample"]),
-        .executable(name: "SwiftGodotUI", targets: ["SwiftGodotUI"])
     ],
     dependencies: [
-        .package(url: "https://github.com/migueldeicaza/SwiftGodot", revision: "245b20d43b85d8280a2a99a24b9c6f4f9058e8f2")
+        .package(path: "../SwiftGodot")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,31 +24,9 @@ let package = Package(
         .target(
             name: "SwiftGodotKit",
             dependencies: ["SwiftGodot", "libgodot"]),
-        
-            .executableTarget(
-                name: "UglySample",
-                dependencies: ["SwiftGodotKit"]),
-        
-            .executableTarget(
-                name: "TrivialSample",
-                dependencies: ["SwiftGodotKit"]),
-        .executableTarget(
-            name: "SwiftGodotUI",
-            dependencies: ["SwiftGodotKit"]),
-
-            .executableTarget(
-                name: "Properties",
-                dependencies: ["SwiftGodotKit"]),
-        
-        // This is a sample that I am porting
-        .target(
-            name: "Dodge",
-            dependencies: ["SwiftGodotKit", "libgodot"]),
         .binaryTarget (
             name: "libgodot",
-            url: "https://github.com/migueldeicaza/SwiftGodotKit/releases/download/v1.0.1/libgodot.xcframework.zip",
-            checksum: "bb6ec0946311a71f1eba7ad393c0adf7b8f34a2389d8234ff500b2764b0c6ba5"
-        ),
+            path: "../build/libgodot.xcframework"),
         .testTarget(
             name: "SwiftGodotKitTests",
             dependencies: ["SwiftGodotKit"]),

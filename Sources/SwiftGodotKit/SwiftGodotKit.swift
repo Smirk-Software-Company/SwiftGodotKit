@@ -7,36 +7,23 @@
 import Foundation
 import SwiftGodot
 import libgodot
+import SwiftUI
 @_implementationOnly import GDExtension
 
-// Callbacks that the user provides
-var loadSceneCb: ((SceneTree) -> ())?
-var loadProjectSettingsCb: ((ProjectSettings)->())?
-var initHookCb: ((GDExtension.InitializationLevel) -> ())?
-
-func projectSettingsBind (_ x: UnsafeMutableRawPointer?) {
-    if let cb = loadProjectSettingsCb, let ptr = x {
-        cb (ProjectSettings.createFrom(nativeHandle: ptr))
-    }
-}
-
 func embeddedExtensionInit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
-    print ("SwiftEmbed: Register our types here, level: \(l)")
-    if let cb = initHookCb {
-        cb (GDExtension.InitializationLevel(rawValue: Int (l.rawValue))!)
+    for cb in initCallbacks {
+        cb(GDExtension.InitializationLevel(rawValue: Int (l.rawValue))!)
     }
 }
 
 func embeddedExtensionDeinit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
-    print ("SwiftEmbed: Unregister here")
+    for cb in deinitCallbacks {
+        cb(GDExtension.InitializationLevel(rawValue: Int (l.rawValue))!)
+    }
 }
 
-var library: OpaquePointer!
-var gfcallbacks = UnsafePointer<GDExtensionInstanceBindingCallbacks> (Wrapped.fcallbacks)
-var gucallbacks = UnsafePointer<GDExtensionInstanceBindingCallbacks> (Wrapped.ucallbacks)
-
 // Courtesy of GPT-4
-func withUnsafePtr (strings: [String], callback: (UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?)->()) {
+func withUnsafePtr<T> (strings: [String], callback: (UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>?) -> T) -> T {
     let cStrings: [UnsafeMutablePointer<Int8>?] = strings.map { string in
         // Convert Swift string to a C string (null-terminated)
         return strdup(string)
@@ -49,43 +36,73 @@ func withUnsafePtr (strings: [String], callback: (UnsafeMutablePointer<UnsafeMut
     // Add a null pointer at the end of the array to indicate its end
     cStringArray[cStrings.count] = nil
 
-    callback (cStringArray)
+    let res = callback (cStringArray)
     
     for i in 0..<strings.count {
         free(cStringArray[i])
     }
     cStringArray.deallocate()
+    
+    return res
 }
 
-/// Starts godot with the specified parameters.
-///
-/// This calls first `initHook()` once Godot has initialized, here you can register
-/// types and perform other initialization tasks.   Then `loadProjectSettings` is
-/// called with an instance of ProjectSettings, and finally, your `loadScene` is called.
-///
-/// While this function does return when Godot is shut down, it is not possible to invoke
-/// Godot again at this point.
-///
-/// - Parameters:
-///  - args: arguments to pass to Godot
-///  - initHook: call to prepare anything before Godot runs, types and others
-///  - loadScene: called to load your initial scene
-///  - loadProjectSettings: callback to configure your project settings
-///  - verbose: whether to show additional logging information.
-public func runGodot (args: [String], initHook: @escaping (GDExtension.InitializationLevel) -> (), loadScene: @escaping (SceneTree)->(), loadProjectSettings: @escaping (ProjectSettings)->(), verbose: Bool = false) {
-    guard loadSceneCb == nil else {
-        print ("runGodot was already invoked, it can currently only be invoked once")
-        return
+public enum GodotResult: Int32 {
+    case OK
+    case ERROR
+    case EXIT
+
+    public var rawValue: Int32 {
+        switch self {
+        case .OK:
+            return libgodot.GODOT_OK
+        case .EXIT:
+            return libgodot.GODOT_EXIT
+        default:
+            return libgodot.GODOT_ERROR
+        }
     }
-    loadSceneCb = loadScene
-    loadProjectSettingsCb = loadProjectSettings
-    initHookCb = initHook
     
-    libgodot_gdextension_bind { godotGetProcAddr, libraryPtr, extensionInit in
+    public init(rawValue: Int32) {
+        switch rawValue {
+        case libgodot.GODOT_OK:
+            self = .OK
+        case libgodot.GODOT_EXIT:
+            self = .EXIT
+        default:
+            self = .ERROR
+        }
+    }
+}
+
+var godot_name = ""
+var godot_runtime_api: UnsafeMutablePointer<libgodot.GodotRuntimeAPI>? = nil
+var initCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
+var deinitCallbacks: [(_ level: GDExtension.InitializationLevel) -> ()] = []
+var runAfterStartCallbacks: [() -> ()] = []
+var godot_started = false
+
+public func addInitCallback(_ cb: @escaping (_ level: GDExtension.InitializationLevel) -> ()) {
+    if godot_started {
+        cb(GDExtension.InitializationLevel.scene)
+    }
+    initCallbacks.append(cb)
+}
+
+public func runAfterStart(_ cb: @escaping () -> ()) {
+    if godot_started {
+        cb()
+    } else {
+        runAfterStartCallbacks.append(cb)
+    }
+}
+
+public func initGodot(library_name: String) {
+    godot_name = library_name
+    godot_runtime_api = libgodot.godot_load_library()
+    godot_runtime_api!.pointee.godot_register_extension_library(library_name, { godotGetProcAddr, libraryPtr, extensionInit in
         if let godotGetProcAddr {
             let bit = unsafeBitCast(godotGetProcAddr, to: OpaquePointer.self)
             setExtensionInterface(to: bit, library: OpaquePointer (libraryPtr!))
-            library = OpaquePointer (libraryPtr)!
             extensionInit?.pointee = GDExtensionInitialization(
                 minimum_initialization_level: GDEXTENSION_INITIALIZATION_CORE,
                 userdata: nil,
@@ -95,19 +112,38 @@ public func runGodot (args: [String], initHook: @escaping (GDExtension.Initializ
         }
         
         return 0
-    } _: { startup in
-        if let cb = loadSceneCb, let ptr = startup {
-            cb (SceneTree.createFrom(nativeHandle: ptr))
-        }
-    }
-
-    //libgodot_bind(initBind, sceneBind, projectSettingsBind)
-    var copy = args
-    copy.insert("SwiftGodotKit", at: 0)
-    if verbose {
-        copy.insert ("--verbose", at: 1)
-    }
-    withUnsafePtr(strings: copy) { ptr in
-        godot_main (Int32 (copy.count), ptr)
-    }
+    })
 }
+
+public func godot_load_engine(args: [String]) -> GodotResult {
+    var copy = args
+    copy.insert(godot_name, at: 0)
+    return GodotResult(rawValue: withUnsafePtr(strings: copy, callback: { ptr in
+        return godot_runtime_api!.pointee.godot_load_engine(Int32 (copy.count), ptr)
+    }))
+}
+
+public func godot_start_engine(layer: CALayer) -> GodotResult {
+    var result = GodotResult(rawValue: godot_runtime_api!.pointee.godot_start_engine(UInt64(bitPattern:Int64(Int(bitPattern: Unmanaged.passRetained(layer).toOpaque())))))
+    if result == GodotResult.OK {
+        godot_started = true
+    }
+    for cb in runAfterStartCallbacks {
+        cb()
+    }
+    runAfterStartCallbacks.removeAll()
+    return result
+}
+
+public func godot_iterate_engine() -> GodotResult {
+    return GodotResult(rawValue: godot_runtime_api!.pointee.godot_iterate_engine())
+}
+
+public func godot_shutdown_engine() -> GodotResult {
+    var result = GodotResult(rawValue: godot_runtime_api!.pointee.godot_shutdown_engine())
+    if result == GodotResult.EXIT {
+        godot_started = false
+    }
+    return result
+}
+
