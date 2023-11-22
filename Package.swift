@@ -16,7 +16,8 @@ let package = Package(
             targets: ["SwiftGodotKit"]),
     ],
     dependencies: [
-        .package(path: "../SwiftGodot")
+        .package(url: "https://github.com/Smirk-Software-Company/SwiftGodot", branch: "main")
+//        .package(path: "../SwiftGodot")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
