@@ -16,15 +16,15 @@ final class GodotRuntime {
     static var settings: ProjectSettings?
     
     static func run (completion: @escaping () -> Void) {
-        guard !isRunning else { return }
-        isRunning = true
-        runGodot (args: [], initHook: { level in
-        }, loadScene: { scene in
-            self.scene = scene
-            completion()
-        }, loadProjectSettings: { settings in
-            self.settings = settings
-        })
+//        guard !isRunning else { return }
+//        isRunning = true
+//        runGodot (args: [], initHook: { level in
+//        }, loadScene: { scene in
+//            self.scene = scene
+//            completion()
+//        }, loadProjectSettings: { settings in
+//            self.settings = settings
+//        })
     }
     
     static func stop() {

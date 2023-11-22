@@ -100,7 +100,7 @@ xcframework out of it, using the script in SwiftGodot (a peer to this
 repository):
 
 ```
-cd ../SwiftGodotKit/scripts
+cd ../SwiftGodot/scripts
 sh -x make-libgodot.xcframework ../../SwiftGodot ../../libgodot /tmp/
 ```
 
