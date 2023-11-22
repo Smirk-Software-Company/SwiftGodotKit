@@ -25,7 +25,7 @@ let package = Package(
         .target(
             name: "SwiftGodotKit",
             dependencies: ["SwiftGodot", "libgodot"]),
-        .binaryTarget(name: "libgodot", url: "https://github.com/Smirk-Software-Company/SwiftGodotKit/blob/main/libgodot.xcframework.zip", checksum: "76c2ae03151c30f9a7a7fa890ec8dbb1781becd1"),
+        .binaryTarget(name: "libgodot", url: "https://github.com/Smirk-Software-Company/SwiftGodotKit/raw/76c2ae03151c30f9a7a7fa890ec8dbb1781becd1/libgodot.xcframework.zip", checksum: "76c2ae03151c30f9a7a7fa890ec8dbb1781becd1"),
 //        .binaryTarget (
 //            name: "libgodot",
 //            path: "../libgodot.xcframework"),
