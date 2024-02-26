@@ -36,7 +36,7 @@ func embeddedExtensionInit (userData: UnsafeMutableRawPointer?, l: GDExtensionIn
 
 func embeddedExtensionDeinit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
     for cb in deinitCallbacks {
-        cb(GDExtension.InitializationLevel(rawValue: Int (l.rawValue))!)
+        cb (GDExtension.InitializationLevel(integerValue: l.rawValue))
     }
 }
 
