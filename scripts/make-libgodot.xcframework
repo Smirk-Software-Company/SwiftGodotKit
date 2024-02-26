@@ -28,7 +28,7 @@ build() {
     build=$2
     file=$3
     echo "starting build on $host"
-    #ssh -A $host "cd $dir && git pull --rebase && git reset --hard $hash && rm -rf bin && $build"
+    ssh -A $host "cd $dir && git pull --rebase && git reset --hard $hash && rm -rf bin && $build"
     scp $host:$dir/bin/$file $file
 }
 

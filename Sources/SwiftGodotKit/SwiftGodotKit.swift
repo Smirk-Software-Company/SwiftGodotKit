@@ -10,9 +10,27 @@ import libgodot
 import SwiftUI
 @_implementationOnly import GDExtension
 
+// Callbacks that the user provides
+var loadSceneCb: ((SceneTree) -> ())?
+var loadProjectSettingsCb: ((ProjectSettings)->())?
+var initHookCb: ((GDExtension.InitializationLevel) -> ())?
+
+func projectSettingsBind (_ x: UnsafeMutableRawPointer?) {
+    if let cb = loadProjectSettingsCb, let ptr = x {
+        cb (ProjectSettings.createFrom(nativeHandle: ptr))
+    }
+}
+
+extension GDExtension.InitializationLevel {
+    init<T : BinaryInteger>(integerValue: T) {
+        self = .init(rawValue: RawValue(integerValue))!
+    }
+}
+
 func embeddedExtensionInit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
-    for cb in initCallbacks {
-        cb(GDExtension.InitializationLevel(rawValue: Int (l.rawValue))!)
+    print ("SwiftEmbed: Register our types here, level: \(l)")
+    if let cb = initHookCb {
+        cb (GDExtension.InitializationLevel(integerValue: l.rawValue))
     }
 }
 
