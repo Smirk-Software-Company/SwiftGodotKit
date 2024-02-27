@@ -28,8 +28,7 @@ extension GDExtension.InitializationLevel {
 }
 
 func embeddedExtensionInit (userData: UnsafeMutableRawPointer?, l: GDExtensionInitializationLevel) {
-    print ("SwiftEmbed: Register our types here, level: \(l)")
-    if let cb = initHookCb {
+    for cb in initCallbacks {
         cb (GDExtension.InitializationLevel(integerValue: l.rawValue))
     }
 }
