@@ -176,4 +176,4 @@ func registerTypes (level: GDExtension.InitializationLevel) {
     }
 }
 
-runGodot(args: [], initHook: registerTypes, loadScene: loadScene, loadProjectSettings: { settings in })
+//runGodot(args: [], initHook: registerTypes, loadScene: loadScene, loadProjectSettings: { settings in })

@@ -64,6 +64,13 @@ func registerTypes (level: GDExtension.InitializationLevel) {
 @main
 class Startup {
     static func main () {
-        runGodot(args: [], initHook: registerTypes, loadScene: loadScene, loadProjectSettings: { settings in })
+        let instance = GodotInstance.create(args: [])
+        instance?.start()
+        while true {
+            if instance?.iteration() ?? true {
+                break;
+            }
+        }
+        instance?.shutdown()
     }
 }

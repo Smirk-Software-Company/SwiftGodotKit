@@ -7,6 +7,7 @@ let package = Package(
     name: "SwiftGodotKit",
     platforms: [
         .macOS(.v13),
+        .iOS(.v15),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -19,8 +20,7 @@ let package = Package(
         .executable(name: "TrivialSample", targets: ["TrivialSample"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/migueldeicaza/SwiftGodot", revision: "088b001be4de6aca139d998b5ff617b5d9f789e7")
-        //.package(path: "../SwiftGodot"),
+        .package(path: "../SwiftGodot")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -29,8 +29,9 @@ let package = Package(
             name: "SwiftGodotKit",
             dependencies: [
                 "SwiftGodot",
-                .target(name: "binary_libgodot", condition: .when(platforms: [.macOS])),
-                .target(name: "libgodot", condition: .when(platforms: [.linux, .windows])),
+                "libgodot",
+                //.target(name: "libgodot", condition: .when(platforms: [.macOS, .iOS])),
+                //.target(name: "libgodot", condition: .when(platforms: [.linux, .windows])),
             ]
         ),
         
@@ -54,18 +55,18 @@ let package = Package(
             name: "Dodge",
             dependencies: [
                 "SwiftGodotKit",
-                .target(name: "binary_libgodot", condition: .when(platforms: [.macOS])),
-                .target(name: "libgodot", condition: .when(platforms: [.linux, .windows])),
+                .target(name: "libgodot", condition: .when(platforms: [.macOS, .iOS])),
+                //.target(name: "libgodot", condition: .when(platforms: [.linux, .windows])),
             ],
             resources: [.copy ("Project")]
         ),
         .binaryTarget (
-            name: "binary_libgodot",
-            url: "https://github.com/migueldeicaza/SwiftGodotKit/releases/download/v1.1.0/libgodot.xcframework.zip",
-            checksum: "a90f2082714ac652c8aa6c1546a707c00a362b855071afa73a4443ffd96dcea0"
+            name: "libgodot",
+            //path: "libgodot/libgodot.xcframework"
+            path: "../build/libgodot.xcframework"
         ),
-        .systemLibrary(
-            name: "libgodot"
-        ),
+        //.systemLibrary(
+        //    name: "libgodot"
+        //),
     ]
 )
